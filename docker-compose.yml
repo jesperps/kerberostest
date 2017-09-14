@@ -1,7 +1,11 @@
 version: '3'
 services:
     kerberosserver:
-        build: ./kerberosserver
+        build: 
+            context: ./kerberosserver
+            args:
+                - REALM=${REALM}
+                - PROXY=${PROXY}
         volumes:
              - ./kerberosserver/config/krb5.conf:/etc/krb5.conf
         hostname: kerberosserver
