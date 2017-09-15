@@ -11,7 +11,13 @@ services:
         hostname: kerberosserver
         domainname: mydomain.com
         command: [bash,-c,"/etc/init.d/heimdal-kdc start && while true; do date; ping -c 4 kerberosclient; sleep 30; done"]
-        #command: [/etc/init.d/heimdal-kdc,start]
     kerberosclient:
-        build: ./kerberosclient
+        build: 
+            context: ./kerberosclient
+            args:
+                - PROXY=${PROXY}
+        volumes:
+            - ./kerberosclient/config/krb5.conf:/etc/krb5.conf
+        hostname: kerberosclient
+        domainname: mydomain.com
         command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 30; done"]
