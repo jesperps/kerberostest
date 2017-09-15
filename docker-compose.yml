@@ -1,0 +1,8 @@
+version: '3'
+services:
+    kerberosserver:
+        build: ./kerberosserver
+        command: [bash,-c,"while true; do date; ping -c 4 kerberosclient; sleep 30; done"]
+    kerberosclient:
+        build: ./kerberosclient
+        command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 30; done"]
