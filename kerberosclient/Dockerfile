@@ -10,5 +10,6 @@ RUN apt-get update -y \
         libkrb5-26-heimdal \
         heimdal-clients \
         heimdal-kcm \
+        openssh-client
    
 

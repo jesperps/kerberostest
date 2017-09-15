@@ -1,0 +1,13 @@
+$ORIGIN 0.20.172.in-addr.arpa. 
+$TTL 86400 
+@	IN	SOA	dnsserver.mydomain.com. hostmaster.mydomain.com. (
+			2001062501 ; serial                     
+			21600      ; refresh after 6 hours                     
+			3600       ; retry after 1 hour                     
+			604800     ; expire after 1 week                     
+			86400 )    ; minimum TTL of 1 day        
+
+        IN      NS      dnsserver.mydomain.com.
+
+5	IN	PTR	sshserver.mydomain.com.	
+6	IN	PTR	centosclient.mydomain.com.	

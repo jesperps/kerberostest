@@ -1,6 +1,7 @@
 version: '3'
 services:
     kerberosserver:
+        container_name: kerberosserver
         build: 
             context: ./kerberosserver
             args:
@@ -8,26 +9,100 @@ services:
                 - PROXY=${PROXY}
         volumes:
              - ./kerberosserver/config/krb5.conf:/etc/krb5.conf
+             - ./dnsserver/config/resolv.conf:/etc/resolv.conf
         hostname: kerberosserver
         domainname: mydomain.com
-        command: [bash,-c,"/etc/init.d/heimdal-kdc start && while true; do date; ping -c 4 kerberosclient; sleep 30; done"]
+        networks:
+            skynet:
+                ipv4_address: 172.20.0.4
+        command: [bash,-c,"/etc/init.d/heimdal-kdc start && while true; do date; ping -c 4 kerberosclient; sleep 180; done"]
     kerberosclient:
+        container_name: kerberosclient
         build: 
             context: ./kerberosclient
             args:
                 - PROXY=${PROXY}
         volumes:
             - ./kerberosclient/config/krb5.conf:/etc/krb5.conf
+            - ./dnsserver/config/resolv.conf:/etc/resolv.conf 
         hostname: kerberosclient
         domainname: mydomain.com
-        command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 30; done"]
+        networks:
+            skynet:
+                ipv4_address: 172.20.0.8
+        command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 180; done"]
     centosclient:
+        container_name: centosclient 
         build:
             context: ./centosclient
             args:
                 - PROXY=${PROXY}
         volumes:
             - ./centosclient/config/krb5.conf:/etc/krb5.conf
+            - ./dnsserver/config/resolv.conf:/etc/resolv.conf
         hostname: centosclient
         domainname: mydomain.com
-        command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 30; done"]
+        networks:
+            skynet:
+                ipv4_address: 172.20.0.6
+        command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 180; done"]
+    sshserver:
+        container_name: sshserver
+        build:
+            context: ./sshserver
+            args:
+                - PROXY=${PROXY}
+        volumes:
+            - ./sshserver/config/sshd_config:/etc/ssh/sshd_config
+            - ./sshserver/config/krb5.conf:/etc/krb5.conf
+            - ./dnsserver/config/resolv.conf:/etc/resolv.conf
+        hostname: sshserver
+        domainname: mydomain.com
+        networks:
+            skynet:
+                ipv4_address: 172.20.0.5
+        ports:
+            - "2222:22"
+        command: [/usr/sbin/sshd,-D]
+        #command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 180; done"]
+    mitserver:
+        container_name: mitserver
+        build:
+            context: ./mitserver
+            args:
+                - PROXY=${PROXY}
+        volumes:
+             - ./mitserver/config/krb5.conf:/etc/krb5.conf
+             - ./dnsserver/config/resolv.conf:/etc/resolv.conf
+        hostname: mitserver
+        domainname: mydomain.com
+        networks:
+            skynet:
+                ipv4_address: 172.20.0.9        
+        command: [bash,-c,"while true; do date; ping -c 4 kerberosclient; sleep 180; done"]
+    dnsserver:
+        container_name: dnsserver
+        build:
+            context: ./dnsserver
+            args:
+                - PROXY=${PROXY}
+        volumes:
+            - ./dnsserver/config/named.conf:/etc/named.conf
+            - ./dnsserver/config/named:/etc/named
+            - ./dnsserver/config/resolv.conf:/etc/resolv.conf
+            - ./dnsserver/scripts/moddns.sh:/scripts/moddns.sh
+        hostname: dnsserver
+        domainname: mydomain.com
+        networks:
+            skynet:
+                ipv4_address: 172.20.0.7
+        ports:
+            - "53:53"
+        command: [bash,-c,"/usr/sbin/named -u named -f -c /etc/named.conf"]
+
+networks:
+    skynet:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.20.0.0/24
