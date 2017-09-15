@@ -21,3 +21,13 @@ services:
         hostname: kerberosclient
         domainname: mydomain.com
         command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 30; done"]
+    centosclient:
+        build:
+            context: ./centosclient
+            args:
+                - PROXY=${PROXY}
+        #volumes:
+         #   - ./centosclient/config/krb5.conf:/etc/krb5.conf
+        hostname: centosclient
+        domainname: mydomain.com
+        command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 30; done"]
