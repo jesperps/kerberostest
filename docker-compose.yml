@@ -2,7 +2,12 @@ version: '3'
 services:
     kerberosserver:
         build: ./kerberosserver
-        command: [bash,-c,"while true; do date; ping -c 4 kerberosclient; sleep 30; done"]
+        volumes:
+             - ./kerberosserver/config/krb5.conf:/etc/krb5.conf
+        hostname: kerberosserver
+        domainname: mydomain.com
+        command: [bash,-c,"/etc/init.d/heimdal-kdc start && while true; do date; ping -c 4 kerberosclient; sleep 30; done"]
+        #command: [/etc/init.d/heimdal-kdc,start]
     kerberosclient:
         build: ./kerberosclient
         command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 30; done"]
