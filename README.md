@@ -97,7 +97,7 @@ The sshserver is also a kerberos klient. Besides a valid `krb5.config` _GSSAPIAu
 docker-compose exec sshserver id -a testuser
 uid=1000(testuser) gid=1000(testuser) groups=1000(testuser)
 ```
-- Make sure is enabled in `/etc/ssh/ssh_config`
+- Make sure is enabled in `/etc/ssh/ssh_config` (on the client)
 ```
 Host *
 	GSSAPIAuthentication yes
