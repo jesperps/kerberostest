@@ -38,7 +38,7 @@ services:
             args:
                 - PROXY=${PROXY}
         volumes:
-            - ./centosclient/config/krb5.conf:/etc/krb5.conf
+            - ./mitserver/config/krb5.conf:/etc/krb5.conf
             - ./dnsserver/config/resolv.conf:/etc/resolv.conf
         hostname: centosclient
         domainname: mydomain.com
@@ -54,7 +54,7 @@ services:
                 - PROXY=${PROXY}
         volumes:
             - ./sshserver/config/sshd_config:/etc/ssh/sshd_config
-            - ./sshserver/config/krb5.conf:/etc/krb5.conf
+            - ./mitserver/config/krb5.conf:/etc/krb5.conf
             - ./dnsserver/config/resolv.conf:/etc/resolv.conf
         hostname: sshserver
         domainname: mydomain.com
@@ -73,13 +73,18 @@ services:
                 - PROXY=${PROXY}
         volumes:
              - ./mitserver/config/krb5.conf:/etc/krb5.conf
+             - ./mitserver/config/kdc.conf:/var/kerberos/krb5kdc/kdc.conf
+             - ./mitserver/config/kadm5.acl:/var/kerberos/krb5kdc/kadm5.acl
+             - ./mitserver/logs/krb5libs.log:/var/log/krb5libs.log
+             - ./mitserver/logs/krb5kdc.log:/var/log/krb5kdc.log
+             - ./mitserver/logs/kadmind.log:/var/log/kadmind.log
              - ./dnsserver/config/resolv.conf:/etc/resolv.conf
         hostname: mitserver
         domainname: mydomain.com
         networks:
             skynet:
                 ipv4_address: 172.20.0.9        
-        command: [bash,-c,"while true; do date; ping -c 4 kerberosclient; sleep 180; done"]
+        command: [bash,-c,"/usr/sbin/krb5kdc -P /var/run/krb5kdc.pid && /usr/sbin/_kadmind -P /var/run/kadmind.pid && while true; do date; ping -c 4 kerberosclient; sleep 180; done"]
     dnsserver:
         container_name: dnsserver
         build:

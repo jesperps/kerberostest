@@ -2,7 +2,7 @@
 
 while getopts 'p:i:h:d:k:t:' opt; do
   case $opt in
-    p) PATHEN="$OPTARG"
+    p) PATHEN="$OPTARG" #Path till katalog med konfig: deafult: /etc/named
     ;;
     i) IP="$OPTARG"
     ;;
@@ -12,7 +12,7 @@ while getopts 'p:i:h:d:k:t:' opt; do
     ;;
     k) KOMMENTAR="$OPTARG"
     ;;
-    t) TABORT="$OPTARG"
+    t) TABORT="$OPTARG" #true att ta bort
     ;;
     \?) echo "Invalid option -$OPTARG" >&2
     ;;
@@ -28,7 +28,7 @@ function nySerial {
     else
         NYSRL=$(date +"%Y%m%d1")
     fi
-    sed -i "s/[0-9].*\;.*serial$/\t$NYSRL\t\;\tserial/" $1
+    sed -i "s/[0-9].*\;.*serial$/\t${NYSRL}\t\;\tserial/" $1
 }
 
 if [ "$PATHEN" = "" ]; then
@@ -40,53 +40,44 @@ RNTVRK=$(echo $IP|awk '{ split($1,a,"."); print a[3]"."a[2]"."a[1]; }')
 ID=$(echo $IP|awk '{ split($1,a,"."); print a[4]; }')
 FRWRD=$PATHEN/$DOMN.zone
 REVRS=$PATHEN/$NTVRK.zone
-echo $FRWRD
-echo $REVRS
 
 if [ "$TABORT" = true ]; then
-    echo "Tar bort $HOST ur $FRWRD..."
+    echo "Tar bort ${HOST} ur ${FRWRD}..."
     nySerial $FRWRD
     sed -i "s/^$HOST\.[a-z].*//" $FRWRD
 
-    echo "Tar bort $HOST ur $REVRS..."
+    echo "Tar bort ${HOST} ur ${REVRS}..."
     nySerial $REVRS
     sed -i "s/^[1-9].*$HOST\.[a-z].*//" $REVRS
 else
     if $(grep -q $HOST $FRWRD) ; then
-        echo "Hosten finns redan i $FRWRD..."
-        exit 1
+        echo "Hosten finns redan i ${FRWRD}..."
     else
-        echo "Lägger till $HOST i $FRWR...D"
+        echo "Lägger till $HOST i ${FRWRS}..."
         nySerial $FRWRD
-        printf "$HOST.$DOMN.\tIN\tA\t$IP\t;$KOMMENTAR\n" >> $FRWRD
+        printf "${HOST}\tIN\tA\t${IP}\t;${KOMMENTAR}\n" >> $FRWRD
     fi
 
 
-    if $(egrep -q "^$ID\t.*IN|^$ID .*IN" $REVRS) ; then
-        echo "Numret finns redan i $REVRS..."
-        exit 1
+    if $(grep -q "^${ID}.*IN" $REVRS) ; then
+        echo "Numret finns redan i ${REVRS}..."
     else
-        echo "Lägger till $HOST i $REVR...S"
+        echo "Lägger till $HOST i ${REVRS}..."
         nySerial $REVRS
-        printf "$ID\tIN\tPTR\t$HOST.$DOMN.\t\n" >> $REVRS
+        printf "${ID}\tIN\tPTR\t${HOST}.$DOMN.\t\n" >> $REVRS
     fi
 fi
 
 named-checkzone -q $DOMN $FRWRD
 if [ $? -ne 0 ]; then 
-    echo "zonkonfen för$FRWRD validerar inte... kontrollera innehållet"
+    echo "zonkonfen för ${FRWRD} validerar inte... kontrollera innehållet"
     exit 1
 fi
 
 named-checkzone -q $RNTVRK.in-addr.arpa $REVRS 
 if [ $? -ne 0 ]; then 
-    echo "zonkonfen för$REVRS validerar inte... kontrollera innehållet"
+    echo "zonkonfen för ${REVRS} validerar inte... kontrollera innehållet"
     exit 1
 else 
-    echo "zonkonfen validerar startar om..."
-    /etc/init.d/named restart
-    
-    #special för devil-linux
-    echo "Spara config..."
-    save-config -q
+    echo "zonkonfen validerar starta om containern...(manuellt)"
 fi

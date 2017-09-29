@@ -12,3 +12,6 @@ $TTL 86400
 dnsserver	IN	A	172.20.0.7
 sshserver	IN	A	172.20.0.5	;
 centosclient	IN	A	172.20.0.6	;
+kerberosserver.mydomain.com.	IN	A	172.20.0.4	;
+kerberosclient	IN	A	172.20.0.8	;
+mitserver	IN	A	172.20.0.9	;

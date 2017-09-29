@@ -11,3 +11,7 @@ RUN yum -y update \
         krb5-libs \
         krb5-auth-dialog \
         krb5-pkinit-openssl
+COPY ./config/krb5.conf /etc/
+RUN kdb5_util create -s -P password \
+    && kadmin.local -q "addprinc -pw password testuser" \
+    && kadmin.local -q "addprinc -pw password root/admin"

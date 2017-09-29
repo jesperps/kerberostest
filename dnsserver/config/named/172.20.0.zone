@@ -11,3 +11,7 @@ $TTL 86400
 
 5	IN	PTR	sshserver.mydomain.com.	
 6	IN	PTR	centosclient.mydomain.com.	
+4	IN	PTR	kerberosserver.mydomain.com.	
+7	IN	PTR	dnsserver.mydomain.com.	
+8	IN	PTR	kerberosclient.mydomain.com.	
+9	IN	PTR	mitserver.mydomain.com.	
