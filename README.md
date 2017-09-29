@@ -83,4 +83,36 @@ Valid starting     Expires            Service principal
 09/25/17 14:48:16  09/26/17 14:48:16  krbtgt/MYDOMAIN.COM@MYDOMAIN.COM
 [root@centosclient /]#
 ```
+
+## SSH and kerberos authentication
+The sshserver is also a kerberos klient. Besides a valid `krb5.config` _GSSAPIAuthentication_ needs to be enabled. This is already configured for the sshserver service. To get athentication working the folowing has to be done:
+
+### Add the sshserver to kerberos
+- Run `sudo docker-compose exec sshserver kadmin -q "addprinc -randkey host/sshserver.mydomain.com"`
+- And `sudo docker-compose exec sshserver kadmin -q "ktadd -k /etc/krb5.keytab host/sshserver.mydomain.com"`
+
+### Verfiy ssh with kerberos authentication
+- Verify there is a testuser on the sshserver
+```
+docker-compose exec sshserver id -a testuser
+uid=1000(testuser) gid=1000(testuser) groups=1000(testuser)
+```
+- Make sure is enabled in `/etc/ssh/ssh_config`
+```
+Host *
+	GSSAPIAuthentication yes
+```
+- Check that you have a valid ticket
+```
+sudo docker-compose exec centosclient klist -l
+
+Principal name                 Cache name
+--------------                 ----------
+testuser@MYDOMAIN.COM          FILE:/tmp/krb5cc_0
+pinky:kerberostest mrpink$
+```
+    - Or create a new with `kinit`
+- And then test it `sudo docker-compose exec centosclient ssh testuser@sshserver.mydomain.com`
+    - You should be logged in to the sshserver without any questions asked
+
     
