@@ -103,6 +103,7 @@ Host *
 	GSSAPIAuthentication yes
 ```
 - Check that you have a valid ticket
+    - Or create a new with `kinit`
 ```
 sudo docker-compose exec centosclient klist -l
 
@@ -111,7 +112,6 @@ Principal name                 Cache name
 testuser@MYDOMAIN.COM          FILE:/tmp/krb5cc_0
 pinky:kerberostest mrpink$
 ```
-    - Or create a new with `kinit`
 - And then test it `sudo docker-compose exec centosclient ssh testuser@sshserver.mydomain.com`
     - You should be logged in to the sshserver without any questions asked
 
