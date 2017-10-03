@@ -98,13 +98,18 @@ The sshserver is also a kerberos klient. Besides a valid `krb5.config` _GSSAPIAu
 docker-compose exec sshserver id -a testuser
 uid=1000(testuser) gid=1000(testuser) groups=1000(testuser)
 ```
-- Make sure is enabled in `/etc/ssh/ssh_config` (on the client)
+- Make sure _GSSAPIAuthentication_ is enabled in `/etc/ssh/sshd_config` (on the server)
+```
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes
+```
+- Also make sure it is enabled in `/etc/ssh/ssh_config` (on the client)
 ```
 Host *
 	GSSAPIAuthentication yes
 ```
 - Check that you have a valid ticket
-    - Or create a new with `kinit`
+    - Or create a new with `kinit testuser`
 ```
 sudo docker-compose exec centosclient klist -l
 
