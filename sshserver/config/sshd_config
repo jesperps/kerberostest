@@ -77,7 +77,7 @@ KerberosAuthentication yes
 
 # GSSAPI options
 GSSAPIAuthentication yes
-GSSAPICleanupCredentials yes
+#GSSAPICleanupCredentials yes
 #GSSAPIStrictAcceptorCheck yes
 #GSSAPIKeyExchange no
 #GSSAPIEnablek5users no

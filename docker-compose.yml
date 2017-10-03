@@ -1,36 +1,5 @@
-version: '3'
+version: '3.3'
 services:
-    kerberosserver:
-        container_name: kerberosserver
-        build: 
-            context: ./kerberosserver
-            args:
-                - REALM=${REALM}
-                - PROXY=${PROXY}
-        volumes:
-             - ./kerberosserver/config/krb5.conf:/etc/krb5.conf
-             - ./dnsserver/config/resolv.conf:/etc/resolv.conf
-        hostname: kerberosserver
-        domainname: mydomain.com
-        networks:
-            skynet:
-                ipv4_address: 172.20.0.4
-        command: [bash,-c,"/etc/init.d/heimdal-kdc start && while true; do date; ping -c 4 kerberosclient; sleep 180; done"]
-    kerberosclient:
-        container_name: kerberosclient
-        build: 
-            context: ./kerberosclient
-            args:
-                - PROXY=${PROXY}
-        volumes:
-            - ./kerberosclient/config/krb5.conf:/etc/krb5.conf
-            - ./dnsserver/config/resolv.conf:/etc/resolv.conf 
-        hostname: kerberosclient
-        domainname: mydomain.com
-        networks:
-            skynet:
-                ipv4_address: 172.20.0.8
-        command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 180; done"]
     centosclient:
         container_name: centosclient 
         build:
@@ -38,7 +7,7 @@ services:
             args:
                 - PROXY=${PROXY}
         volumes:
-            - ./mitserver/config/krb5.conf:/etc/krb5.conf
+            - ./kerberosserver/config/krb5.conf:/etc/krb5.conf
             - ./dnsserver/config/resolv.conf:/etc/resolv.conf
         hostname: centosclient
         domainname: mydomain.com
@@ -53,38 +22,53 @@ services:
             args:
                 - PROXY=${PROXY}
         volumes:
+            - ./kerberosserver/config/krb5.conf:/etc/krb5.conf
             - ./sshserver/config/sshd_config:/etc/ssh/sshd_config
-            - ./mitserver/config/krb5.conf:/etc/krb5.conf
             - ./dnsserver/config/resolv.conf:/etc/resolv.conf
         hostname: sshserver
         domainname: mydomain.com
         networks:
             skynet:
                 ipv4_address: 172.20.0.5
-        ports:
-            - "2222:22"
-        command: [/usr/sbin/sshd,-D]
-        #command: [bash,-c,"while true; do date; ping -c 4 kerberosserver; sleep 180; done"]
-    mitserver:
-        container_name: mitserver
+        depends_on:
+            - kerberosserver
+        command: >
+            bash -c "
+                 kadmin -w ${PW} \
+                        -q \"addprinc -randkey host/sshserver.mydomain.com\"
+                 if ! klist -k /etc/krb5.keytab | grep -q sshserver ; then
+                     kadmin -w ${PW} \
+                            -q \"ktadd -k /etc/krb5.keytab host/sshserver.mydomain.com\";
+                 fi
+                 /usr/sbin/sshd -D"
+    kerberosserver:
+        container_name: kerberosserver
         build:
-            context: ./mitserver
+            context: ./kerberosserver
             args:
                 - PROXY=${PROXY}
         volumes:
-             - ./mitserver/config/krb5.conf:/etc/krb5.conf
-             - ./mitserver/config/kdc.conf:/var/kerberos/krb5kdc/kdc.conf
-             - ./mitserver/config/kadm5.acl:/var/kerberos/krb5kdc/kadm5.acl
-             - ./mitserver/logs/krb5libs.log:/var/log/krb5libs.log
-             - ./mitserver/logs/krb5kdc.log:/var/log/krb5kdc.log
-             - ./mitserver/logs/kadmind.log:/var/log/kadmind.log
+             - ./kerberosserver/config/krb5.conf:/etc/krb5.conf
+             - ./kerberosserver/config/kdc.conf:/var/kerberos/krb5kdc/kdc.conf
+             - ./kerberosserver/config/kadm5.acl:/var/kerberos/krb5kdc/kadm5.acl
+             - ./kerberosserver/logs/krb5libs.log:/var/log/krb5libs.log
+             - ./kerberosserver/logs/krb5kdc.log:/var/log/krb5kdc.log
+             - ./kerberosserver/logs/kadmind.log:/var/log/kadmind.log
              - ./dnsserver/config/resolv.conf:/etc/resolv.conf
-        hostname: mitserver
+        hostname: kerberosserver
         domainname: mydomain.com
         networks:
             skynet:
                 ipv4_address: 172.20.0.9        
-        command: [bash,-c,"/usr/sbin/krb5kdc -P /var/run/krb5kdc.pid && /usr/sbin/_kadmind -P /var/run/kadmind.pid && while true; do date; ping -c 4 kerberosclient; sleep 180; done"]
+        command: >
+            bash -c "
+                if kadmin.local listprincs| grep -q testuser; then
+                    kdb5_util create -s -P ${PW}
+                    kadmin.local -q \"addprinc -pw ${PW} testuser\"
+                    kadmin.local -q \"addprinc -pw ${PW} root/admin\"
+                fi
+                /usr/sbin/krb5kdc
+                /usr/sbin/kadmind -nofork"
     dnsserver:
         container_name: dnsserver
         build:
@@ -101,8 +85,6 @@ services:
         networks:
             skynet:
                 ipv4_address: 172.20.0.7
-        ports:
-            - "53:53"
         command: [bash,-c,"/usr/sbin/named -u named -f -c /etc/named.conf"]
 
 networks:

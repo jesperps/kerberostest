@@ -1,12 +1,17 @@
-FROM debian
+FROM centos
 
 ARG PROXY
-ARG REALM
 
 ENV http_proxy=${PROXY} https_proxy=${PROXY}
-RUN apt-get update -y \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y heimdal-kdc heimdal-docs \
-    && rm -f /var/lib/heimdal-kdc/heimdal.db /var/lib/heimdal-kdc/m-key \
-    && kstash --random-key \
-    && kadmin -l init --realm-max-ticket-life=unlimited --realm-max-renewable-life=unlimited ${REALM} \
-    && kadmin -l add --max-ticket-life=1d --max-renewable-life=1w --pw-expiration-time=never --expiration-time=never --policy=default --password=password --attributes= testuser@${REALM} 
+RUN yum -y update \
+    && yum -y install krb5-server \
+        krb5-libs \
+        krb5-auth-dialog \
+        krb5-workstation \
+        krb5-libs \
+        krb5-auth-dialog \
+        krb5-pkinit-openssl
+COPY ./config/krb5.conf /etc/
+RUN kdb5_util create -s -P password \
+    && kadmin.local -q "addprinc -pw password testuser" \
+    && kadmin.local -q "addprinc -pw password root/admin"
