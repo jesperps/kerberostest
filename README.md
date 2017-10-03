@@ -101,7 +101,6 @@ uid=1000(testuser) gid=1000(testuser) groups=1000(testuser)
 - Make sure _GSSAPIAuthentication_ is enabled in `/etc/ssh/sshd_config` (on the server)
 ```
 GSSAPIAuthentication yes
-GSSAPICleanupCredentials yes
 ```
 - Also make sure it is enabled in `/etc/ssh/ssh_config` (on the client)
 ```
