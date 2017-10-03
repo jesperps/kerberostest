@@ -8,5 +8,4 @@ RUN yum -y update \
         krb5-workstation \
         openssh-server \
     && /usr/bin/ssh-keygen -A \
-    && cat /etc/krb5.conf \
     && useradd testuser
