@@ -93,6 +93,7 @@ The sshserver is also a kerberos klient. Besides a valid `krb5.config` _GSSAPIAu
 
 ### Verfiy ssh with kerberos authentication
 - Verify there is a testuser on the sshserver
+    - Or create one with `useradd testuser`
 ```
 docker-compose exec sshserver id -a testuser
 uid=1000(testuser) gid=1000(testuser) groups=1000(testuser)
